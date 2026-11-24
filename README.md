@@ -1,14 +1,15 @@
-# Jose Lugo, REALTOR® (Elite site)
+# Jose Lugo, REALTOR® · Aspyre Collective · eXp Realty
 
-Client build of the Elite layout for Jose Lugo, Wilmington, NC. Built from his Zillow profile (Nov 2026).
+Built on the Nolan Sells NC template. Content is from Jose's Zillow profile and his own bio (Nov 2026).
 
 ## Edit
-All text, stats, towns, sales and contact info live at the top of `_build/build.py`.
+All text, stats, towns, sales, reviews and contact info live at the top of `_build/build.py`.
 Run `python3 _build/build.py` after editing to rebuild every page.
 
-## Still placeholders (need from Jose)
-- Phone, email, brokerage name, office address (`_build/build.py`) and `LEAD_EMAIL` in `elite.js`
-- Logo (`images/logo.png`), favicon (`images/icon.png`)
-- Active listings (`FEATURED`) and listing photos
-- Domain (`BASE`) and optional Calendly link
-- Local Wilmington photos/drone video (the beach clip is generic)
+## Still needed from Jose
+- Original logo file (current one is cut from a screenshot)
+- Local photos or drone video: area pages and sold cards use drawn ocean scenes, and the beach clip is generic stock
+- Listing photos for the sold cards, and any active listings (`FEATURED`)
+- Confirm years in business (his bio says "just over three years", Zillow says 5)
+- Domain (`BASE` in `_build/build.py`, plus `robots.txt` and `sitemap.xml`) and optional Calendly link
+- Forms go to jose@aspyrecollective.com through FormSubmit; the first submission emails him an activation link

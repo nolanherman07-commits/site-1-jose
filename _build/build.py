@@ -1,34 +1,36 @@
 # Builds every page of Jose Lugo's Elite site. Run: python3 _build/build.py
-import os, html, json
+import os, html, json, hashlib
 os.chdir(os.path.dirname(os.path.abspath(__file__)) + "/..")
+# Version tags so browsers fetch fresh CSS/JS whenever those files change.
+V_CSS = hashlib.md5(open("elite.css", "rb").read()).hexdigest()[:8]
+V_JS = hashlib.md5(open("elite.js", "rb").read()).hexdigest()[:8]
 E = html.escape
 
-# ===== AGENT INFO =====
-# PLACEHOLDERS: phone, email, brokerage, office address, logo and headshot still need Jose's real info.
+# ===== AGENT INFO (from Jose's Zillow profile and his own bio, Nov 2026) =====
 NAME, FIRST = "Jose Lugo", "Jose"
-BROKERAGE = "Brokerage name"          # PLACEHOLDER
-PHONE, TEL, EMAIL = "910-555-0100", "+19105550100", "jose@example.com"  # PLACEHOLDERS
-ADDRESS = "Wilmington, NC"           # PLACEHOLDER: office street address
+TEAM, BROKERAGE = "Aspyre Collective", "eXp Realty"
+PHONE, TEL, EMAIL = "910-679-9255", "+19106799255", "jose@aspyrecollective.com"
+ADDRESS = "1213 Culbreth Dr, Suite 109, Wilmington, NC 28405"
 MAP = "https://www.google.com/maps/search/?api=1&query=" + ADDRESS.replace(" ", "+")
 ZILLOW = "https://www.zillow.com/profile/joseL1982"
-CALENDLY = ""  # optional: paste a Calendly link here
+CALENDLY = ""  # optional: paste a Calendly link here (the Book a call button calls him until then)
 EXT = 'target="_blank" rel="noopener"'
-# Full web address of the site. Change this once the domain is set up.
-BASE = "https://example.com/"        # PLACEHOLDER
+# Full web address of the site. Change this once Jose's domain is set up.
+BASE = "https://nolanherman07-commits.github.io/site-1-jose/"
 SHARE_IMAGE = "images/share.jpg"  # picture shown when a page link is texted or posted
 
-# Career stats from Jose's own bio; Zillow-tracked stats (Nov 2026) for the listings page
-YEARS_TXT, TRANSACTIONS = "3+", "115+"
-Z_SALES, LAST_12, RANGE = 51, 24, "$35K–$790K"
+# Career number from Jose's bio; the rest are from Zillow (Nov 2026)
+TRANSACTIONS, LAST_12, REVIEW_COUNT, RANGE, TOP_SALE = "115+", 30, 20, "$35K–$2.7M", "$2.7M"
 
-FEATURED = []  # active listings: (address, city, link, photo)
-# Recent sales from Zillow (addresses aren't shown publicly, so cards show price + side)
+FEATURED = []  # active listings: (address, city, link, photo, asking price)
+Z = "https://www.zillow.com/homedetails/%s_zpid/"
+# Most recent sales on Zillow. Add a photo path as the 4th item when Jose sends listing photos.
 SOLD = [
-  ("Sold for $785,000", "Supply, NC · Represented the seller", ZILLOW, ""),
-  ("Sold for $375,000", "Wilmington, NC · Represented the seller", ZILLOW, ""),
-  ("Sold for $291,000", "Rocky Point, NC · Represented the buyer", ZILLOW, ""),
-  ("Sold for $279,000", "Shallotte, NC · Represented the buyer", ZILLOW, ""),
-  ("Sold for $168,000", "Hampstead, NC · Represented the buyer", ZILLOW, ""),
+  ("419 Caswell Beach Rd", "Oak Island, NC · $1,700,000", Z % "78252426", ""),
+  ("4929 E Pelican Dr", "Oak Island, NC · $1,285,000", Z % "442024583", ""),
+  ("3609 Mason Port Dr", "Wilmington, NC · $870,000", Z % "439804368", ""),
+  ("57 Pinewood Dr", "Carolina Shores, NC · $465,000", Z % "197974305", ""),
+  ("584 Asphodel Dr SW", "Supply, NC · Land · $75,000", Z % "197958470", ""),
 ]
 AREAS = {
   "wilmington": dict(name="Wilmington", scene="golden", county="New Hanover County",
@@ -56,29 +58,40 @@ AREAS = {
     intro="Hampstead is in Pender County along US-17, north of Wilmington and close to Topsail Island. It's popular with buyers who want more space, waterfront and golf communities, and a quieter pace while staying near the city.",
     facts=[("Pender", "County"), ("~30 min", "To Wilmington"), ("Topsail", "Island nearby"), ("US-17", "Coastal highway")],
     love=["Close to Topsail Island beaches", "Golf and waterfront communities", "Bigger lots and a quieter pace", "Easy US-17 drive to Wilmington"]),
-  "rocky-point": dict(name="Rocky Point", scene="golden", county="Pender County",
-    short="Country space off I-40, a short drive north of Wilmington.",
-    intro="Rocky Point is a rural community in Pender County along I-40, north of Wilmington. Buyers come here for more land and home for the money, with a straight shot down I-40 into the city.",
-    facts=[("Pender", "County"), ("~25 min", "To Wilmington"), ("I-40", "Right off the highway"), ("Acreage", "More land")],
-    love=["More home and land for the money", "Quiet, country setting", "Direct I-40 commute to Wilmington", "New construction options"]),
+  "castle-hayne": dict(name="Castle Hayne", scene="golden", county="New Hanover County",
+    short="Room to spread out just north of Wilmington, right off I-40.",
+    intro="Castle Hayne sits in northern New Hanover County along I-40 and the Northeast Cape Fear River. Buyers come here for bigger lots and newer neighborhoods while staying a short drive from downtown Wilmington.",
+    facts=[("New Hanover", "County"), ("~15 min", "To downtown Wilmington"), ("I-40", "Right off the highway"), ("River", "NE Cape Fear")],
+    love=["Bigger lots and newer neighborhoods", "Quick I-40 access", "River access for boating and fishing", "Close to Wilmington jobs and shopping"]),
+  "oak-island": dict(name="Oak Island", scene="sunset", county="Brunswick County", video="beach",
+    short="A laid-back barrier island with miles of south-facing beach.",
+    intro="Oak Island is a barrier island town in Brunswick County with a long south-facing beach, two piers and the Intracoastal Waterway behind it. It's a favorite for second homes and short-term rentals as well as full-time island living.",
+    facts=[("Brunswick", "County"), ("~45 min", "To Wilmington"), ("Atlantic", "Oceanfront"), ("ICW", "Waterway homes")],
+    love=["Miles of wide, family-friendly beach", "Oceanfront, second-row and waterway homes", "Strong short-term rental market", "Minutes from Southport"]),
+  "sneads-ferry": dict(name="Sneads Ferry", scene="mist", county="Onslow County", video="beach",
+    short="A fishing village on the New River, next to North Topsail Beach.",
+    intro="Sneads Ferry is a waterfront community in Onslow County where the New River meets the Intracoastal Waterway. It's close to North Topsail Beach and Camp Lejeune, with a mix of new construction and established neighborhoods.",
+    facts=[("Onslow", "County"), ("~10 min", "To North Topsail Beach"), ("~50 min", "To Wilmington"), ("New River", "Waterfront")],
+    love=["Minutes from North Topsail Beach", "New construction and first-home prices", "Boating, fishing and fresh seafood", "Close to Camp Lejeune"]),
   "supply": dict(name="Supply", scene="dawn", county="Brunswick County", video="beach",
     short="The gateway to Holden Beach, with room to spread out.",
     intro="Supply is a community in Brunswick County just inland from Holden Beach. It's a great fit for buyers who want to be minutes from the sand without paying island prices, from waterfront homes to new builds.",
     facts=[("Brunswick", "County"), ("~15 min", "To Holden Beach"), ("~40 min", "To Wilmington"), ("ICW", "Waterfront nearby")],
     love=["Minutes from Holden Beach", "Waterfront and water-access homes", "More space for the money", "Quiet coastal setting"]),
-  "shallotte": dict(name="Shallotte", scene="sunset", county="Brunswick County", video="beach",
-    short="A small town on US-17 between Ocean Isle and Holden Beach.",
-    intro="Shallotte is a small town in southern Brunswick County on US-17, close to Ocean Isle Beach and Holden Beach. It's the shopping hub for the South Brunswick Islands, with a mix of established neighborhoods and new construction.",
-    facts=[("Brunswick", "County"), ("~15 min", "To Ocean Isle Beach"), ("~45 min", "To Wilmington"), ("US-17", "Coastal highway")],
-    love=["Close to Ocean Isle and Holden Beach", "Local shopping and dining", "New construction and established neighborhoods", "Small-town coastal feel"]),
+  "carolina-shores": dict(name="Carolina Shores", scene="sunset", county="Brunswick County",
+    short="Golf-course living near Calabash, Sunset Beach and the state line.",
+    intro="Carolina Shores is a town in southern Brunswick County next to Calabash, minutes from Sunset Beach and the South Carolina line. It's known for golf-course neighborhoods and a relaxed, small-town pace.",
+    facts=[("Brunswick", "County"), ("~10 min", "To Sunset Beach"), ("~55 min", "To Wilmington"), ("Golf", "Course communities")],
+    love=["Golf-course neighborhoods", "Close to Sunset Beach and Calabash seafood", "Quiet, established community", "Easy trip to North Myrtle Beach"]),
 }
 # Order of towns from north to south (used for "Nearby areas" and the relocation page)
-CORRIDOR = ["rocky-point", "hampstead", "wilmington", "wrightsville-beach", "carolina-beach", "leland", "supply", "shallotte"]
-HOME_AREAS = ["wilmington", "wrightsville-beach", "hampstead", "leland", "shallotte"]
+CORRIDOR = ["sneads-ferry", "hampstead", "castle-hayne", "wilmington", "wrightsville-beach", "carolina-beach", "leland", "oak-island", "supply", "carolina-shores"]
+HOME_AREAS = ["wilmington", "wrightsville-beach", "carolina-beach", "oak-island", "hampstead"]
 # Drive times from each town (approximate, normal traffic): (to downtown Wilmington, to the beach)
 DRIVE = {"wilmington": ("—", "~20 min"), "wrightsville-beach": ("~20 min", "On the beach"), "carolina-beach": ("~25 min", "On the beach"),
-         "leland": ("~15 min", "~35 min"), "hampstead": ("~30 min", "~15 min"), "rocky-point": ("~25 min", "~40 min"),
-         "supply": ("~40 min", "~15 min"), "shallotte": ("~45 min", "~15 min")}
+         "leland": ("~15 min", "~35 min"), "hampstead": ("~30 min", "~15 min"), "castle-hayne": ("~15 min", "~30 min"),
+         "oak-island": ("~45 min", "On the beach"), "sneads-ferry": ("~50 min", "~10 min"),
+         "supply": ("~40 min", "~15 min"), "carolina-shores": ("~55 min", "~10 min")}
 
 # Monthly market update: edit these each month (source + period shown on the page)
 MARKET_MONTH = "November 2026"
@@ -89,43 +102,43 @@ MARKET = [
 MARKET_TAKE = [
   ("For buyers", "Homes are taking more than two months to sell and there are over four months of supply. That means more choices and more room to negotiate on price, repairs and closing costs."),
   ("For sellers", "Prices are holding steady, but buyers are patient. Homes priced right from day one and marketed well are the ones that sell fastest."),
-  ("City vs. coast", "Moving a little north into Pender County or south into Brunswick County can get you more home or more land for the money, still close to the beach."),
+  ("City vs. coast", "Moving a little north into Pender or Onslow County, or south into Brunswick County, can get you more home or more land for the money, still close to the beach."),
 ]
 
 NAV = [("about.html", "About"), ("buy.html", "Buying?"), ("sell.html", "Selling?"), ("relocate.html", "Relocating?"), ("listings.html", "Listings")]
-TABS = [("about.html", "About"), ("buy.html", "Buy"), ("sell.html", "Sell"), ("relocate.html", "Out of town"), ("listings.html", "Listings")]  # short labels for the phone tab bar
+TABS = [("about.html", "About"), ("buy.html", "Buying?"), ("sell.html", "Selling?"), ("relocate.html", "Relocating?"), ("listings.html", "Listings")]  # phone tab bar, same labels as the desktop menu (the logo is the Home link)
 
 def header(active):
     links = "".join(f'<a href="{h}"{" class=\"active\"" if h == active else ""}>{t}</a>' for h, t in NAV)
     return f'''<header class="nav-wrap">
-  <nav class="nav-pill"><a href="index.html" class="nav-logo"><img src="images/logo.png" alt="{NAME}, REALTOR®" /></a>{links}</nav>
+  <nav class="nav-pill"><a href="index.html" class="nav-logo"><img src="images/logo.png" alt="{TEAM}" /></a>{links}</nav>
   <a href="contact.html" class="nav-cta">Let's talk</a>
-  <nav class="tabbar" aria-label="Pages">{"".join(f'<a href="{h}"{" class=\"active\"" if (h == active or (h == "index.html" and not active)) else ""}>{t}</a>' for h, t in [("index.html", "Home")] + TABS)}</nav>
+  <nav class="tabbar" aria-label="Pages">{"".join(f'<a href="{h}"{" class=\"active\"" if h == active else ""}>{t}</a>' for h, t in TABS)}</nav>
 </header>'''
 
 FOOTER = f'''<footer class="foot">
   <div class="wrap foot-grid">
-    <a href="index.html"><img src="images/logo.png" alt="{NAME}, REALTOR®" /></a>
-    <p>{NAME}, REALTOR® · {BROKERAGE}<br />{ADDRESS}</p>
+    <a href="index.html"><img src="images/logo.png" alt="{TEAM}" /></a>
+    <p>{NAME}, REALTOR® · {TEAM} · {BROKERAGE}<br />{ADDRESS}</p>
     <div class="soc"><a href="about.html">About</a><a href="buy.html">Buy</a><a href="sell.html">Sell</a><a href="relocate.html">Relocate</a><a href="market.html">Market update</a><a href="listings.html">Listings</a><a href="contact.html">Contact</a></div>
     <div class="soc"><a href="{ZILLOW}" {EXT}>Zillow</a></div>
   </div>
   <div class="wrap foot-areas"><span>Areas I serve</span>{"".join(f'<a href="{k}.html">{AREAS[k]["name"]}</a>' for k in CORRIDOR)}</div>
   <div class="wrap fine eho-line"><svg class="eho" viewBox="0 0 40 40" role="img" aria-label="Equal Housing Opportunity"><path d="M20 3 2 15v4h4v18h28V19h4v-4z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><rect x="12" y="20" width="16" height="3.4" fill="currentColor"/><rect x="12" y="27" width="16" height="3.4" fill="currentColor"/></svg>
-    <span>© <span class="yr">2026</span> {BROKERAGE} · Equal Housing Opportunity · REALTOR®</span></div>
+    <span>© <span class="yr">2026</span> {NAME} · {TEAM} · {BROKERAGE} · Equal Housing Opportunity · REALTOR®</span></div>
 </footer>'''
 
 SCHEMA = json.dumps({
   "@context": "https://schema.org", "@type": "RealEstateAgent",
   "name": f"{NAME}, REALTOR®", "url": BASE, "image": BASE + "images/headshot.jpg", "logo": BASE + "images/logo.png",
   "telephone": TEL, "email": EMAIL,
-  "worksFor": {"@type": "RealEstateOrganization", "name": BROKERAGE},
-  "address": {"@type": "PostalAddress", "addressLocality": "Wilmington", "addressRegion": "NC", "addressCountry": "US"},
+  "worksFor": {"@type": "RealEstateOrganization", "name": f"{TEAM}, {BROKERAGE}"},
+  "address": {"@type": "PostalAddress", "streetAddress": "1213 Culbreth Dr, Suite 109", "postalCode": "28405", "addressLocality": "Wilmington", "addressRegion": "NC", "addressCountry": "US"},
   "areaServed": [{"@type": "City", "name": AREAS[k]["name"] + ", NC"} for k in CORRIDOR],
   "sameAs": [ZILLOW],
 }, ensure_ascii=False)
 
-DEFAULT_DESC = f"{NAME}, REALTOR® in Wilmington, NC. Helping buyers and sellers across Wilmington, Wrightsville Beach, Hampstead, Leland and the Brunswick County coast."
+DEFAULT_DESC = f"{NAME}, REALTOR® with {TEAM} in Wilmington, NC. Helping buyers and sellers across Wilmington, the beaches, Hampstead, Leland and Oak Island."
 
 def page(fname, title, active, body, curtain=False, desc=DEFAULT_DESC):
     url = BASE + ("" if fname == "index.html" else fname)
@@ -149,7 +162,7 @@ def page(fname, title, active, body, curtain=False, desc=DEFAULT_DESC):
 <link rel="icon" href="images/icon.png" /><link rel="apple-touch-icon" href="images/icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="elite.css" />
+<link rel="stylesheet" href="elite.css?v={V_CSS}" />
 </head>
 <body{"" if curtain else ' class="page-fade"'}>
 {'<div class="curtain" aria-hidden="true"><img src="images/logo.png" alt="" /></div>' if curtain else ""}
@@ -157,7 +170,7 @@ def page(fname, title, active, body, curtain=False, desc=DEFAULT_DESC):
 {header(active)}
 {body}
 {FOOTER}
-<script src="elite.js"></script>
+<script src="elite.js?v={V_JS}"></script>
 </body>
 </html>'''
     open(fname, "w").write(doc)
@@ -166,20 +179,21 @@ def bg(scene, photo=None):
     # a real photo (slow zoom) if we have one, otherwise an animated coastal scene
     return f'<div class="photo-bg" style="background-image:url(\'{photo}\')"></div>' if photo else f'<div class="scene" data-scene="{scene}"></div>'
 
-def page_hero(crumb, title_html, sub, scene, photo=None, video=None):
+# Still photo shown behind each hero video. Phones that refuse to autoplay (iPhone Low Power Mode,
+# data saver) show this photo instead of the video.
+STILLS = {"beach": "images/stills/beach.jpg"}
+
+def page_hero(crumb, title_html, sub, scene, photo=None, video=None, still=None):
+    photo = photo or still or STILLS.get(video)
     fog = "" if photo else '<div class="fog f1"></div><div class="fog f2"></div>'
     return f'''<section class="page-hero"><div class="frame">
   {bg(scene, photo)}{(f'<video class="hero-video" data-src="{video if video.startswith("http") else f"videos/{video}.mp4"}" muted loop playsinline autoplay hidden disablepictureinpicture disableremoteplayback preload="metadata" aria-hidden="true"></video>' if video else '')}{fog}<div class="shade"></div>
   <div class="ph-copy"><span class="crumb"><i></i> {crumb}</span><h1 class="split-words">{title_html}</h1><p>{sub}</p></div>
 </div></section>'''
 
-# Price, beds, baths and square feet shown on each active listing card.
-DETAILS = {}
-
-def card(addr, city, url, photo, sold=False, price=True):
+def card(addr, city, url, photo, ask="", sold=False, price=True):
     pic = f'<img src="{photo}" alt="{E(addr)}" />' if photo else '<div class="scene" data-scene="dawn"></div>'
-    d = DETAILS.get(addr)
-    sub = f"{city} · {d[0]} · {d[1]} bd / {d[2]} ba" if (d and price) else city
+    sub = f"{city} · {ask}" if (price and ask and not sold) else city
     return f'''<a class="home-card" href="{url}" {EXT}><div class="img">{pic}</div>
   <div class="info glass"><span class="badge{" sold" if sold else ""}">{"Sold" if sold else "Featured"}</span><h3>{E(addr)}</h3><p>{sub}</p></div></a>'''
 
@@ -187,7 +201,7 @@ def rail(items, title_html, eyebrow, link=None):
     return f'''<section class="listings">
   <div class="wrap head"><div><p class="eyebrow">{eyebrow}</p><h2>{title_html}</h2></div>
     <div class="arrows">{f'<a class="pill" href="{link}" style="margin-right:.6rem">View all</a>' if link else ""}<button class="arr prev" aria-label="Previous">←</button><button class="arr next" aria-label="Next">→</button></div></div>
-  <div class="rail" tabindex="0">{"".join(card(*i[:4], sold=i in SOLD) for i in items)}</div>
+  <div class="rail" tabindex="0">{"".join(card(*i, sold=i in SOLD) for i in items)}</div>
   <div class="wrap"><div class="progress"><span></span></div></div>
 </section>'''
 
@@ -206,31 +220,84 @@ SELL_TOOLS = f'''<section class="tools" id="value">
     <div class="glass tool reveal"><p class="eyebrow">Free home value report</p><h3>What's your home <em>worth?</em></h3>
       <p>A personalized value report from {FIRST}, not an algorithm. Usually within 24 hours.</p>{VALUE_FORM}</div>
     <div class="glass tool reveal"><p class="eyebrow">My listing plan</p><h3>What you get when you <em>list with me</em></h3>
-      <ul class="checks"><li>Pricing based on recent sales near you</li><li>Professional photos and online marketing</li><li>Exposure on the MLS, Zillow and major home sites</li><li>Hands-on negotiation through closing</li></ul></div>
+      <ul class="checks"><li>Pricing based on recent sales near you</li><li>Professional photos and online marketing</li><li>Zillow Showcase: virtual tour and interactive floor plan</li><li>Hands-on negotiation through closing</li></ul></div>
   </div>
 </section>'''
 
-# Real quotes from Jose's Zillow reviews
+# Exact lines from Jose's Zillow reviews (2026). Name · what they did.
 QUOTES = [
-  ("Jose listed my house on a Monday and we had a contract by Saturday!", "Amanda M.", "Sold in 2024"),
-  ("Jose was phenomenal throughout the entire process of selling our home.", "Zillow reviewer", "Bought &amp; sold in Murraysville"),
-  ("Jose did an excellent job with supporting my new home purchase.", "Zillow reviewer", "Bought in 2025"),
-  ("Quality at its finest!!", "Zillow reviewer", "Sold in Rocky Point"),
+  ("Jose and his team went above and beyond throughout the entire process.", "Thomas Z.", "Bought in Carolina Shores"),
+  ("He is a hard core advocate for his clients and will fight for you to get exactly what you want.", "Annalee H.", "Bought in Carolina Beach"),
+  ("He found a great home that matched what I needed.", "Lauren S.", "Bought in Wilmington"),
+  ("From day one, Jose listened to our specific needs, and made things happen for us.", "Brandi &amp; Kevin", "Bought in Castle Hayne"),
+  ("No detail slipped through the cracks.", "Santina M.", "First home in Sneads Ferry"),
+  ("Thank you Jose for making my housing dreams come true.", "Berna S.", "Home buyer"),
+  ("Jose’s knowledge of our target area was invaluable.", "Charles K.", "Bought a beach house"),
+  ("He was super responsive and helped us remotely find the right place for us.", "Michael F.", "Out-of-state buyer, Oak Island"),
 ]
-FULL_REVIEW = dict(text=["Jose listed my house on a Monday and we had a contract by Saturday!"],
-  name="Amanda M.", detail="Seller · Referred by a neighbor · 2024")
+# One longer review shown under the moving one-liners.
+FULL_REVIEW = dict(
+  text=["After meeting with Jose for the first time and giving him our vision, not only did he find it but he helped create it!",
+        "I can genuinely say not only did we find an amazing agent, but an amazing friend along the way."],
+  name="Thomas D.", detail="First-time buyer · Winnabow, NC · 2026")
 FULL_REVIEW_HTML = f'''<figure class="full-review reveal"><div class="fr-stars">★★★★★</div>
   <blockquote>{"".join(f"<p>{E(t)}</p>" for t in FULL_REVIEW["text"])}</blockquote>
   <figcaption><b>{FULL_REVIEW["name"]}</b><span>{FULL_REVIEW["detail"]}</span><a href="{ZILLOW}" {EXT}>Read it on Zillow →</a></figcaption></figure>'''
 
-QUOTE_STRIP = '<section class="quote-strip" aria-label="Client reviews"><div class="wrap qs-inner"><div class="qs-stars">★★★★★ <span>5.0 on Zillow</span></div><div class="qs-stage">' + "".join(
+QUOTE_STRIP = '<section class="quote-strip" aria-label="Client reviews"><div class="wrap qs-inner"><div class="qs-stars">★★★★★ <span>5.0 on Zillow · ' + str(REVIEW_COUNT) + ' reviews</span></div><div class="qs-stage">' + "".join(
     f'<blockquote class="qs"><p>“{q}”</p><cite>{n} · {w}</cite></blockquote>' for q, n, w in QUOTES) + '</div>' + FULL_REVIEW_HTML + '</div></section>'
 REVIEWS = QUOTE_STRIP
 
-SPECIALTIES = ["Buyer's agent", "Listing agent", "Commercial sales &amp; leasing", "Investment properties &amp; BRRRR", "Custom home building", "New construction", "Relocation", "First-time homebuyers"]
+# Home page review wall: tilted, auto-scrolling cards. Each card is one exact line from a Zillow review.
+WALL_QUOTES = [
+  ("Jose and his team went above and beyond throughout the entire process.", "Thomas Z."),
+  ("He is a hard core advocate for his clients and will fight for you to get exactly what you want.", "Annalee H."),
+  ("I matched with Jose randomly on Zillow and so happy I did.", "Lauren S."),
+  ("We cannot say enough good things about Jose and our experience with his team!", "Brandi &amp; Kevin"),
+  ("No detail slipped through the cracks.", "Santina M."),
+  ("Thank you Jose for making my housing dreams come true.", "Berna S."),
+  ("Jose’s knowledge of our target area was invaluable.", "Charles K."),
+  ("He was super responsive and helped us remotely find the right place for us.", "Michael F."),
+  ("We had a great experience with Jose from beginning to end.", "Jenn B."),
+  ("Not only did he find it but he helped create it!", "Thomas D."),
+  ("He was very responsive to all my questions and helped me every step of the way!", "Lauren S."),
+  ("From day one, Jose listened to our specific needs, and made things happen for us.", "Brandi &amp; Kevin"),
+  ("More importantly, Jose genuinely went to bat for us.", "Santina M."),
+  ("We couldn’t be happier with the experience of buying our new home.", "Thomas Z."),
+  ("Jose was incredible to work with.", "Annalee H."),
+  ("Jose made the entire process of closing quick and easy.", "Charles K."),
+  ("Thank you Jose!", "Michael F."),
+  ("I’d highly recommend him!", "Jenn B."),
+  ("Not only did we find an amazing agent, but an amazing friend along the way.", "Thomas D."),
+  ("From start to finish, he went above and beyond in every way possible.", "Santina M."),
+]
+def _rw_card(q, n, hidden=False):
+    big = " rw-big" if len(q) > 90 else ""
+    aria = ' aria-hidden="true"' if hidden else ""
+    return f'<figure class="rw-card{big}"{aria}><div class="rw-stars">★★★★★</div><blockquote>“{q}”</blockquote><figcaption><b>{n}</b> · Zillow</figcaption></figure>'
+def _rw_col(i):
+    items = WALL_QUOTES[i::5]
+    return (f'<div class="rw-col rw-c{i}"><div class="rw-track">' + "".join(_rw_card(q, n) for q, n in items)
+            + "".join(_rw_card(q, n, True) for q, n in items) + '</div></div>')
+REVIEW_WALL = f'''<section class="rw" aria-label="Client reviews">
+  <div class="rw-head">
+    <div class="rw-kick">★★★★★ <span>5.0 on Zillow · {REVIEW_COUNT} reviews</span></div>
+    <h2>Don't take <em>my</em> word for it.</h2>
+    <p>Real reviews from buyers across Wilmington, Oak Island, Carolina Beach and Castle Hayne.</p>
+    <a href="{ZILLOW}" {EXT}>Read all reviews on Zillow →</a>
+  </div>
+  <div class="rw-stage"><div class="rw-grid">{"".join(_rw_col(i) for i in range(5))}</div></div>
+</section>'''
+
+SERVICES = [
+  ("Residential", "Buying or selling a home, from first-time buyers to seven-figure beach houses."),
+  ("Commercial", "Sales and lease negotiations for business owners and investors."),
+  ("Investment", "Flips, rentals and the BRRRR method: Buy, Rehab, Rent, Refinance, Repeat."),
+  ("Custom builds", "Build your dream home on your own lot or through an all-inclusive package."),
+]
 SPECIALTY_SEC = f'''<section class="sec resumes"><div class="wrap">
-  <div class="head"><div><p class="eyebrow">Specialties</p><h2>However you're moving, <em>I've got you</em></h2></div></div>
-  <ul class="checks" style="columns:2;max-width:760px">{"".join(f"<li>{s}</li>" for s in SPECIALTIES)}</ul>
+  <div class="head"><div><p class="eyebrow">What I do</p><h2>One agent for <em>every move</em></h2></div></div>
+  <div class="svc">{"".join(f'<div class="step reveal"><h3>{t}</h3><p>{b}</p></div>' for t, b in SERVICES)}</div>
 </div></section>'''
 
 TOOLS = f'''<section class="tools">
@@ -246,7 +313,7 @@ TOOLS = f'''<section class="tools">
 BOOK = CALENDLY or "contact.html#book"
 CTA = f'''<section class="contact">
   <div class="frame small">
-    <div class="still-bg" style="background-image:url('images/beach-still.jpg')"></div><div class="shade"></div>
+    <div class="still-bg" style="background-image:url('images/stills/beach.jpg')"></div><div class="shade"></div>
     <div class="c-copy">
       <h2>Ready when <em>you</em> are.</h2>
       <p>Call, text, email, or book a time. I respond fast.</p>
@@ -258,33 +325,33 @@ CTA = f'''<section class="contact">
   </div>
 </section>'''
 
-MARQUEE = '''<div class="marquee" aria-hidden="true"><div class="track">''' + ("<span>Wilmington</span><i>✦</i><span><em>Wrightsville Beach</em></span><i>✦</i><span>Hampstead</span><i>✦</i><span><em>Leland</em></span><i>✦</i><span>Carolina Beach</span><i>✦</i><span>Shallotte</span><i>✦</i><span><em>Cape Fear</em></span><i>✦</i>" * 2) + "</div></div>"
+MARQUEE = '''<div class="marquee" aria-hidden="true"><div class="track">''' + ("<span>Wilmington</span><i>✦</i><span><em>Wrightsville Beach</em></span><i>✦</i><span>Hampstead</span><i>✦</i><span><em>Leland</em></span><i>✦</i><span>Carolina Beach</span><i>✦</i><span>Oak Island</span><i>✦</i><span><em>Cape Fear</em></span><i>✦</i>" * 2) + "</div></div>"
 
 COUNTERS = f'''<div class="counters reveal">
   <div><b data-count="115" data-suffix="+">{TRANSACTIONS}</b><span>Transactions</span></div>
-  <div><b data-count="3" data-suffix="+">{YEARS_TXT}</b><span>Years in real estate</span></div>
   <div><b data-count="{LAST_12}">{LAST_12}</b><span>Sales in the last 12 months</span></div>
-  <div><b>5.0★</b><span>Every Zillow review</span></div>
+  <div><b data-count="{REVIEW_COUNT}">{REVIEW_COUNT}</b><span>Five-star Zillow reviews</span></div>
+  <div><b>{TOP_SALE}</b><span>Top sale</span></div>
 </div>'''
 
 # ================= HOME =================
 page("index.html", f"{NAME}, REALTOR® | Wilmington, NC Real Estate", "", f'''
 <section class="hero" id="top">
   <div class="frame">
-    <div class="scene" data-scene="sunset"></div>
+    <div class="photo-bg" style="background-image:url('images/stills/beach.jpg')"></div>
     <video class="hero-video" data-src="videos/beach.mp4" muted loop playsinline autoplay hidden disablepictureinpicture disableremoteplayback preload="metadata" aria-hidden="true"></video>
     <div class="fog f1"></div><div class="fog f2"></div><div class="fog f3"></div><div class="shade"></div>
     <div class="trace-line" aria-hidden="true"><span class="chip"><i></i> Serving the Wilmington area</span></div>
     <div class="hero-copy">
-      <p class="kicker">{NAME} · REALTOR® · {BROKERAGE}</p>
+      <p class="kicker">{NAME} · REALTOR® · {TEAM}</p>
       <h1 class="split-words">Let's go <em>home.</em></h1>
       <p class="hero-sub">Buying and selling across Wilmington, the beaches, Pender County and the Brunswick County coast, made simple.</p>
       <div class="hero-btns"><a class="pill light" href="listings.html">See my sales</a><a class="pill" href="sell.html#value">What's my home worth?</a></div>
     </div>
     <ul class="hero-stats">
       <li><b data-count="115" data-suffix="+">{TRANSACTIONS}</b>transactions</li>
-      <li><b data-count="3" data-suffix="+">{YEARS_TXT}</b>years in real estate</li>
-      <li><b>5.0★</b>on Zillow</li>
+      <li><b data-count="{LAST_12}">{LAST_12}</b>sales in the last 12 months</li>
+      <li><b data-count="{REVIEW_COUNT}">{REVIEW_COUNT}</b>five-star reviews</li>
     </ul>
     <aside class="glass-card"><small>Meet {FIRST}</small><p>Residential, commercial, investment and custom builds, all with one agent.</p>
       <img src="images/headshot.jpg" alt="{NAME}" /><a class="pill solid" href="about.html">About me</a></aside>
@@ -294,7 +361,7 @@ page("index.html", f"{NAME}, REALTOR® | Wilmington, NC Real Estate", "", f'''
 {MARQUEE}
 <section class="statement">
   <div class="wrap st-grid">
-    <div class="st-photo reveal"><div class="kb"><img src="images/headshot.jpg" alt="{NAME}" /></div><span class="tag-glass">{YEARS_TXT} years · {TRANSACTIONS} transactions</span></div>
+    <div class="st-photo reveal"><div class="kb"><img src="images/headshot.jpg" alt="{NAME}" /></div><span class="tag-glass">{TRANSACTIONS} transactions · 5.0★</span></div>
     <div>
       <p class="eyebrow reveal">Meet {FIRST}</p>
       <h2 class="words home-story">From dream homes for buyers to top-dollar sales for sellers, plus commercial deals and custom builds, I deliver a seamless <em>experience.</em></h2>
@@ -304,19 +371,19 @@ page("index.html", f"{NAME}, REALTOR® | Wilmington, NC Real Estate", "", f'''
     </div>
   </div>
 </section>
-{QUOTE_STRIP}
+{REVIEW_WALL}
 {SPECIALTY_SEC}
 {panels(HOME_AREAS)}
 {TOOLS}
-{rail(FEATURED + SOLD, "Recent <em>wins</em>", "Recently sold", "listings.html")}
-{CTA}''', curtain=True, desc=f"{NAME}, REALTOR® in Wilmington, NC. {TRANSACTIONS} transactions and 5.0 stars on Zillow. Residential, commercial and investment. Buy, sell or relocate anywhere from Hampstead to Shallotte.")
+{rail(FEATURED + SOLD, "Homes I've helped clients <em>buy &amp; sell</em>", "Recently sold", "listings.html")}
+{CTA}''', curtain=True, desc=f"{NAME}, REALTOR® in Wilmington, NC. {TRANSACTIONS} transactions and {REVIEW_COUNT} five-star Zillow reviews. Buy, sell, invest or relocate anywhere from Sneads Ferry to Carolina Shores.")
 
 # ================= ABOUT =================
 page("about.html", f"About {NAME} | Wilmington, NC REALTOR®", "about.html", f'''
-{page_hero("About", f"Meet <em>{FIRST}.</em>", f"REALTOR® with {BROKERAGE}, serving Wilmington, the beaches, Pender County and the Brunswick County coast.", "golden", video="beach")}
+{page_hero("About", f"Meet <em>{FIRST}.</em>", f"REALTOR® with {TEAM}, serving New Hanover, Pender, Brunswick and Onslow counties.", "golden", video="beach")}
 <section class="statement">
   <div class="wrap st-grid">
-    <div class="st-photo reveal"><div class="kb"><img src="images/headshot.jpg" alt="{NAME}" /></div><span class="tag-glass">{BROKERAGE}</span></div>
+    <div class="st-photo reveal"><div class="kb"><img src="images/headshot.jpg" alt="{NAME}" /></div><span class="tag-glass">{TEAM} · {BROKERAGE}</span></div>
     <div>
       <p class="eyebrow reveal">About me</p>
       <h2 class="words">Residential, commercial, investment and custom builds, all with <em>one agent.</em></h2>
@@ -328,16 +395,6 @@ page("about.html", f"About {NAME} | Wilmington, NC REALTOR®", "about.html", f''
     </div>
   </div>
 </section>
-<section class="sec"><div class="wrap"><p class="eyebrow">Behind the scenes</p><h2>On the <em>job</em></h2>
-  <div class="gallery">
-    <div class="reveal"><div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1741156386380-0236c72eb6f9?w=1600&q=80&auto=format&fit=crop')"></div></div>
-    <div class="reveal"><div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1793586938427-e8e37441c962?w=1600&q=80&auto=format&fit=crop')"></div></div>
-    <div class="reveal"><div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1781229771042-2a859f8f8022?w=1600&q=80&auto=format&fit=crop')"></div></div>
-    <div class="reveal"><div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1772313952254-dae19b91854b?w=1600&q=80&auto=format&fit=crop')"></div></div>
-    <div class="reveal"><div class="photo-bg" style="background-image:url('images/beach-still.jpg')"></div></div>
-  </div>
-  <div class="hero-btns" style="margin-top:2.4rem"><a class="pill solid" href="{ZILLOW}" {EXT}>My Zillow profile</a></div>
-</div></section>
 <section class="sec sand"><div class="wrap center"><p class="eyebrow">How I work</p><h2>Clear from <em>day one</em></h2>
   <div class="timeline" style="text-align:left">
     <div class="tl reveal"><i>1</i><h3>Listen</h3><p>We talk through your goals, budget and timeline.</p></div>
@@ -376,16 +433,16 @@ page("buy.html", f"Buy a Home in the Wilmington Area | {NAME}, REALTOR®", "buy.
 
 # ================= SELL =================
 page("sell.html", f"Sell Your Home in the Wilmington Area | {NAME}, REALTOR®", "sell.html", f'''
-{page_hero("Sell", "Sell your <em>home.</em>", "Smart pricing, professional photos, and marketing that puts your home in front of the right buyers.", "dusk", video="sell")}
+{page_hero("Sell", "Sell your <em>home.</em>", "Smart pricing, professional photos, and marketing that puts your home in front of the right buyers.", "dusk", video="sell", still="images/stills/beach.jpg")}
 <section class="statement"><div class="wrap">
   <p class="eyebrow reveal">Results</p>
-  <h2 class="words" style="max-width:1000px">One recent seller listed on a Monday and had a contract by Saturday. I price it right and market it hard so buyers move <em>fast.</em></h2>
+  <h2 class="words" style="max-width:1000px">Top-dollar sales start with the right price and marketing that makes buyers stop <em>scrolling.</em></h2>
   <div style="margin-top:3rem">{COUNTERS}</div>
 </div></section>
 <section class="sec dark"><div class="wrap center"><p class="eyebrow">My selling plan</p><h2>How I get your home <em>sold</em></h2>
   <div class="steps4" style="text-align:left">
     <div class="step reveal"><h3>Price it right</h3><p>A detailed look at recent sales so we list at the right number from day one.</p></div>
-    <div class="step reveal"><h3>Make it shine</h3><p>Professional photos that make buyers stop scrolling.</p></div>
+    <div class="step reveal"><h3>Make it shine</h3><p>Professional photos, a virtual tour and an interactive floor plan with Zillow Showcase.</p></div>
     <div class="step reveal"><h3>Market everywhere</h3><p>The MLS, Zillow, and the major home search sites.</p></div>
     <div class="step reveal"><h3>Negotiate &amp; close</h3><p>I screen offers, negotiate hard, and handle every detail to closing.</p></div>
   </div></div></section>
@@ -398,12 +455,12 @@ page("sell.html", f"Sell Your Home in the Wilmington Area | {NAME}, REALTOR®", 
 featured_html = (f'<div class="grid3">{"".join(card(*l) for l in FEATURED)}</div>' if FEATURED else
   f'<p class="lead" style="max-width:640px">New listings coming soon. See my current homes for sale on Zillow, or reach out and I\'ll send you homes that fit.</p><div class="hero-btns" style="margin-top:1.4rem"><a class="pill solid" href="{ZILLOW}" {EXT}>View on Zillow</a><a class="pill" href="contact.html">Get homes that fit</a></div>')
 page("listings.html", f"Listings & Recent Sales | {NAME}, REALTOR®", "listings.html", f'''
-{page_hero("Listings", "Featured <em>homes.</em>", "Homes for sale and recent sales across the Wilmington area and the NC coast.", "golden", video="sell")}
+{page_hero("Listings", "Featured <em>homes.</em>", "Homes for sale and recent sales across the Wilmington area and the NC coast.", "golden", video="beach")}
 <section class="sec dark"><div class="wrap"><div class="head"><div><p class="eyebrow">For sale</p><h2>Featured <em>listings</em></h2></div><a class="pill" href="{ZILLOW}" {EXT}>All on Zillow</a></div>
   {featured_html}</div></section>
 <section class="sec"><div class="wrap"><div class="head"><div><p class="eyebrow">Results · {RANGE}</p><h2>Recently <em>sold</em></h2></div></div>
   <div class="grid3">{"".join(card(*l, sold=True) for l in SOLD)}</div></div></section>
-{CTA}''', desc=f"Homes for sale and recent sales by {NAME}, REALTOR®, across Wilmington, Pender County and the Brunswick County coast.")
+{CTA}''', desc=f"Homes for sale and recent sales by {NAME}, REALTOR®, across Wilmington, the beaches and the Brunswick County coast.")
 
 # Area pages
 for key, a in AREAS.items():
@@ -443,7 +500,7 @@ page("contact.html", f"Contact {NAME} | Wilmington, NC REALTOR®", "contact.html
     <div><p class="eyebrow" style="color:rgba(255,255,255,.7)">Book a call</p><h2>Pick a <em>time.</em></h2>
       <div class="cal">{"".join(f'<i class="{"sel" if d == 14 else "av" if d in (9,10,15,16,17,21,22) else ""}">{d}</i>' for d in range(5, 26))}</div>
       <a class="pill solid" href="{CALENDLY or "tel:" + TEL}" style="margin-top:1rem">Book a call</a></div></div>
-</div></section>''', desc=f"Call, text or email {NAME}, REALTOR® in Wilmington, NC. {PHONE}.")
+</div></section>''', desc=f"Call, text or email {NAME}, REALTOR® with {TEAM}, {ADDRESS}. {PHONE}.")
 
 # ================= RELOCATE =================
 def town_card(k):
@@ -459,7 +516,7 @@ page("relocate.html", f"Relocating to Wilmington, NC | {NAME}, REALTOR®", "relo
   <div class="facts" style="margin-top:3rem">
     <div class="fact reveal"><b>{len(CORRIDOR)}</b><span>Towns I cover</span></div>
     <div class="fact reveal"><b>~20 min</b><span>Wilmington to the beach</span></div>
-    <div class="fact reveal"><b>3</b><span>Counties: New Hanover, Pender, Brunswick</span></div>
+    <div class="fact reveal"><b>4</b><span>Counties: New Hanover, Pender, Brunswick, Onslow</span></div>
     <div class="fact reveal"><b>5.0★</b><span>On Zillow, including out-of-area buyers</span></div>
   </div>
 </div></section>
@@ -470,7 +527,7 @@ page("relocate.html", f"Relocating to Wilmington, NC | {NAME}, REALTOR®", "relo
     <div class="step reveal"><h3>Local team</h3><p>Trusted lenders, inspectors and closing attorneys, so every step happens on time.</p></div>
     <div class="step reveal"><h3>Close from anywhere</h3><p>I coordinate the details so you can sign remotely if you need to and arrive to your keys.</p></div>
   </div></div></section>
-<section class="sec" id="towns"><div class="wrap"><div class="head"><div><p class="eyebrow">Pender to Brunswick</p><h2>Find your <em>town</em></h2></div></div>
+<section class="sec" id="towns"><div class="wrap"><div class="head"><div><p class="eyebrow">Onslow to Brunswick</p><h2>Find your <em>town</em></h2></div></div>
   <p class="lead" style="max-width:720px">Listed from north to south. Drive times are approximate, in normal traffic.</p>
   <div class="towns">{"".join(town_card(k) for k in CORRIDOR)}</div></div></section>
 {REVIEWS}

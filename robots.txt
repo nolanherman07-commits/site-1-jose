@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nolanherman07-commits.github.io/site-1-jose/sitemap.xml

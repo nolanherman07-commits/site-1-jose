@@ -409,6 +409,24 @@ em { font-style: italic; color: var(--accent); }
 .tools .tool { transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .5s, border-color .5s, opacity 1.1s ease; }
 .tools .tool.reveal.in:hover { transform: scale(1.045); box-shadow: 0 30px 60px rgba(0,0,0,.35); border-color: rgba(246,239,221,.6); }
 
+/* ===== Seasonal background for the lead-tool section (season is set by elite.js from today's date) ===== */
+.tools.season-fall .stars, .tools.season-spring .stars { display: none; }
+.season-fx { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.season-fx span { position: absolute; animation: seasonFall linear infinite; will-change: transform; }
+.season-fx i { display: block; animation: seasonSway ease-in-out infinite alternate; }
+@keyframes seasonFall { to { transform: translate3d(var(--dx), var(--fall), 0); } }
+@keyframes seasonSway { from { transform: translateX(-14px) rotate(-50deg); } to { transform: translateX(14px) rotate(70deg); } }
+.season-fall .season-fx i { border-radius: 2px 70% 2px 70%; }
+.season-spring .season-fx i { border-radius: 70% 4px 70% 4px; }
+.season-winter .season-fx i { border-radius: 50%; filter: blur(.4px); animation-name: seasonDrift; }
+@keyframes seasonDrift { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+.season-summer .season-fx span { animation: seasonWander ease-in-out infinite alternate; }
+.season-summer .season-fx i { border-radius: 50%; box-shadow: 0 0 8px 3px rgba(255,233,138,.75); animation-name: seasonGlow; }
+@keyframes seasonWander { to { transform: translate3d(var(--dx), var(--dy), 0); } }
+@keyframes seasonGlow { from { opacity: .05; } to { opacity: 1; } }
+.tools.fx-paused .season-fx span, .tools.fx-paused .season-fx i { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .season-fx { display: none; } }
+
 /* ===== One-line review strip ===== */
 .quote-strip { padding: 4.2rem 0; background: var(--ink); color: #fff; }
 .qs-inner { text-align: center; }
@@ -518,12 +536,65 @@ p { text-wrap: pretty; }
 @media (hover: none) {
   footer nav a, footer .f-links a, .foot a, .pill.sm { min-height: 44px; display: inline-flex; align-items: center; }
 }
+/* Small phones: keep the five tab labels inside the bar */
+@media (max-width: 360px) { .tabbar a { font-size: .7rem; padding-left: 0; padding-right: 0; letter-spacing: 0; } .tabbar a:first-child, .tabbar a:last-child { padding: 0 .35rem; } }
 
-/* ===== Brand: slate + cream (Aspyre). Slate on light backgrounds, cream on dark ones ===== */
-.hero em, .page-hero em, .quote-strip em, .sec.dark em, .contact em, .tools em, .booking em, .glass em, .curtain em { color: var(--accent-soft); }
-.qs-stars, .fr-stars, .sec.dark .step::before { color: var(--accent-soft); }
+/* ===== Home page review wall (tilted, auto-scrolling Zillow review cards) ===== */
+.rw { position: relative; height: 820px; scroll-margin-top: 90px; overflow: hidden; background: var(--ink, #1c2a37); color: #fff; }
+.rw-head { position: absolute; z-index: 3; left: 6vw; top: 120px; max-width: 440px; }
+.rw-kick { color: var(--accent, #3a5165); letter-spacing: .18em; font-size: .75rem; font-weight: 500; }
+.rw-kick span { color: rgba(255,255,255,.6); margin-left: .5rem; text-transform: uppercase; }
+.rw-head h2 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 4rem; line-height: 1; margin: 1.1rem 0; color: #fff; }
+.rw-head h2 em { color: var(--accent, #3a5165); }
+.rw-head p { color: rgba(255,255,255,.65); font-size: .95rem; line-height: 1.6; max-width: 340px; margin: 0; }
+.rw-head a { display: inline-block; margin-top: 1.6rem; color: var(--accent, #3a5165); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid rgba(246,239,221,.4); padding-bottom: 3px; }
+.rw-stage { position: absolute; inset: -200px -160px -200px 36vw; perspective: 1600px; }
+.rw-grid { display: flex; gap: 22px; height: 100%; transform: rotateX(18deg) rotateY(-14deg) rotateZ(8deg); transform-origin: 30% 50%; }
+.rw-col { flex: 0 0 250px; overflow: hidden; }
+.rw-track { display: flex; flex-direction: column; gap: 22px; animation: rwUp 60s linear infinite; }
+.rw-c1 .rw-track, .rw-c3 .rw-track { animation-name: rwDown; animation-duration: 70s; }
+.rw-c2 .rw-track { animation-duration: 52s; }
+.rw-c4 .rw-track { animation-duration: 66s; }
+@keyframes rwUp { from { transform: translateY(0); } to { transform: translateY(calc(-50% - 11px)); } }
+@keyframes rwDown { from { transform: translateY(calc(-50% - 11px)); } to { transform: translateY(0); } }
+.rw-card { margin: 0; background: #ede4cd; color: #2a2622; border-radius: 16px; padding: 26px 24px 22px; box-shadow: 0 20px 40px rgba(0,0,0,.45); }
+.rw-stars { color: var(--accent, #3a5165); font-size: 13px; letter-spacing: 3px; }
+.rw-card blockquote { font-family: "Instrument Serif", Georgia, serif; font-size: 25px; line-height: 1.18; margin: 14px 0 18px; padding: 0; border: 0; color: #2a2622; }
+.rw-card.rw-big blockquote { font-size: 22px; }
+.rw-card figcaption { font-family: Inter, system-ui, sans-serif; font-size: 11px; color: #8a7f72; letter-spacing: .06em; text-transform: uppercase; }
+.rw-card figcaption b { color: #2a2622; font-weight: 500; }
+.rw::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: linear-gradient(var(--ink, #1c2a37), transparent 16%, transparent 84%, var(--ink, #1c2a37)),
+              linear-gradient(90deg, var(--ink, #1c2a37) 33%, transparent 46%, transparent 82%, var(--ink, #1c2a37)); }
+@media (max-width: 760px) {
+  .rw { height: auto; padding: 56px 0 0; }
+  .rw-head { position: relative; left: auto; top: auto; padding: 0 22px 34px; }
+  .rw-head h2 { font-size: 2.9rem; }
+  .rw-stage { position: relative; inset: auto; height: 560px; perspective: none; padding: 0 14px; }
+  .rw-grid { transform: none; gap: 12px; }
+  .rw-col { flex: 1 1 0; }
+  .rw-c2, .rw-c3, .rw-c4 { display: none; }
+  .rw-track { gap: 12px; }
+  .rw-card { padding: 18px 16px; }
+  .rw-card blockquote { font-size: 19px; }
+  .rw-card.rw-big blockquote { font-size: 17px; }
+  .rw::after { background: linear-gradient(var(--ink, #1c2a37), transparent 12%, transparent 85%, var(--ink, #1c2a37)); }
+}
+@media (prefers-reduced-motion: reduce) { .rw-track { animation: none; } }
+
+/* ===== Brand: slate + cream (Aspyre Collective). Slate on light backgrounds, cream on dark ones ===== */
+.hero em, .page-hero em, .quote-strip em, .sec.dark em, .contact em, .tools em, .booking em, .glass em, .curtain em, .rw-head h2 em { color: var(--accent-soft); }
+.qs-stars, .fr-stars, .sec.dark .step::before, .rw-kick, .rw-head a { color: var(--accent-soft); }
 .pill.solid:hover, .nav-cta:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
 .badge { color: var(--accent-soft); }
 .hero .pill.solid, .page-hero .pill.solid, .contact .pill.solid, .tools .pill.solid, .booking .pill.solid { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
 .hero .pill.solid:hover, .page-hero .pill.solid:hover, .contact .pill.solid:hover, .tools .pill.solid:hover, .booking .pill.solid:hover { background: #fff; color: var(--ink); border-color: #fff; }
 .chip i, .ph-copy .crumb i { background: var(--accent-soft); }
+.season-fall .season-fx, .season-spring .season-fx { display: none; } /* leaves and petals don't suit open water */
+.nav-logo { background: var(--cream); }
+/* Service cards (what Jose does) */
+.svc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin-top: 3rem; }
+.svc .step h3 { font-size: 1.7rem; }
+@media (max-width: 1000px) { .svc { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .svc { grid-template-columns: 1fr; } }
+.nav-logo img { height: 34px; } .nav-logo { padding: .3rem .9rem; }

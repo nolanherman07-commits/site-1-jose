@@ -300,6 +300,15 @@ SPECIALTY_SEC = f'''<section class="sec resumes"><div class="wrap">
   <div class="svc">{"".join(f'<div class="step reveal"><h3>{t}</h3><p>{b}</p></div>' for t, b in SERVICES)}</div>
 </div></section>'''
 
+# Listing and buyer résumés (PDFs built by _build/resumes.py)
+RESUMES = f'''<section class="sec resumes" style="padding-top:0"><div class="wrap">
+  <div class="head"><div><p class="eyebrow">Résumé</p><h2>See why clients <em>choose {FIRST}</em></h2></div></div>
+  <div class="res-grid">
+    <a class="res-card reveal" href="Jose-Lugo-Listing-Resume.pdf" {EXT}><img src="images/resume-listing.jpg" alt="Listing résumé cover" />
+      <div><p class="eyebrow">For sellers</p><h3>Listing <em>résumé</em></h3><p>Results, recent sales, my 15-step listing process and marketing plan.</p><span class="pill solid">Open résumé (PDF)</span></div></a>
+    <a class="res-card reveal" href="Jose-Lugo-Buyer-Resume.pdf" {EXT}><img src="images/resume-buyer.jpg" alt="Buyer résumé cover" />
+      <div><p class="eyebrow">For buyers</p><h3>Buyer <em>résumé</em></h3><p>Results, how buying works, my commitments to you and client reviews.</p><span class="pill solid">Open résumé (PDF)</span></div></a>
+  </div></div></section>'''
 TOOLS = f'''<section class="tools">
   <div class="scene" data-scene="night"></div><div class="stars"></div>
   <div class="wrap tools-grid">
@@ -373,6 +382,7 @@ page("index.html", f"{NAME}, REALTOR® | Wilmington, NC Real Estate", "", f'''
 </section>
 {REVIEW_WALL}
 {SPECIALTY_SEC}
+{RESUMES}
 {panels(HOME_AREAS)}
 {TOOLS}
 {rail(FEATURED + SOLD, "Homes I've helped clients <em>buy &amp; sell</em>", "Recently sold", "listings.html")}

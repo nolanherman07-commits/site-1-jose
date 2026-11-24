@@ -301,7 +301,7 @@ SPECIALTY_SEC = f'''<section class="sec resumes"><div class="wrap">
 </div></section>'''
 
 # Listing and buyer résumés (PDFs built by _build/resumes.py)
-RESUMES = f'''<section class="sec resumes" style="padding-top:0"><div class="wrap">
+RESUMES = f'''<section class="sec resumes"><div class="wrap">
   <div class="head"><div><p class="eyebrow">Résumé</p><h2>See why clients <em>choose {FIRST}</em></h2></div></div>
   <div class="res-grid">
     <a class="res-card reveal" href="Jose-Lugo-Listing-Resume.pdf" {EXT}><img src="images/resume-listing.jpg" alt="Listing résumé cover" />
@@ -381,8 +381,8 @@ page("index.html", f"{NAME}, REALTOR® | Wilmington, NC Real Estate", "", f'''
   </div>
 </section>
 {REVIEW_WALL}
-{SPECIALTY_SEC}
 {RESUMES}
+{SPECIALTY_SEC}
 {panels(HOME_AREAS)}
 {TOOLS}
 {rail(FEATURED + SOLD, "Homes I've helped clients <em>buy &amp; sell</em>", "Recently sold", "listings.html")}
